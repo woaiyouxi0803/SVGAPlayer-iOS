@@ -1,5 +1,11 @@
 # SVGAPlayer
 
+### JXPlus 内容
+1. JXSVGAImageView, 使用JXCacheURLSession代替NSURLSession，依赖YYCache实现缓存
+2. 新增两个jx_r_替换图片的圆角方法
+3. 使用jx_RTLText区分文字滚动右到左
+4. jx_autoContentMode 根据size区分contentMode(videoItem.videoSize.width < videoItem.videoSize.height) ? UIViewContentModeScaleAspectFill : UIViewContentModeScaleAspectFit
+
 ## 2.5.0 版本
 
 该版本增加了对遮罩图层和遮罩图片动态替换的支持。<br>

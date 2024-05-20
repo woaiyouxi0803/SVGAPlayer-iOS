@@ -1,12 +1,12 @@
-# Archived
-本仓库已经停止维护，你仍然继续阅读源码及创建分叉，但本仓库不会继续更新，也不会回答任何 issue。
-
-This repo has stopped maintenance, you can still continue to read the source code and create forks, but this repo will not continue to be updated, nor will it answer any issues.
-
 # SVGAPlayer
 
 [简体中文](./readme.zh.md)
 
+### JXPlus 内容
+1. JXSVGAImageView, 使用JXCacheURLSession代替NSURLSession，依赖YYCache实现缓存
+2. 新增两个jx_r_替换图片的圆角方法
+3. 使用jx_RTLText区分文字滚动右到左
+4. jx_autoContentMode 根据size区分contentMode(videoItem.videoSize.width < videoItem.videoSize.height) ? UIViewContentModeScaleAspectFill : UIViewContentModeScaleAspectFit
 ## 支持本项目
 
 1. 轻点 GitHub Star，让更多人看到该项目。

@@ -29,5 +29,9 @@ Pod::Spec.new do |s|
     ss.pod_target_xcconfig = {
       'GCC_PREPROCESSOR_DEFINITIONS' => '$(inherited) GPB_USE_PROTOBUF_FRAMEWORK_IMPORTS=1',
     }
-  end  
+  end
+  s.subspec 'JXPlus' do |ss|
+    ss.source_files  = "Source/JXPlus/*.{h,m}"
+    ss.dependency 'YYCache'
+  end
 end
