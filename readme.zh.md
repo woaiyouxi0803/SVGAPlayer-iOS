@@ -1,6 +1,18 @@
 # SVGAPlayer
+### 2.5.7.1 新增文字滚动时间调整
+/// 文字重复次数。默认0不重复
+@property (nonatomic, assign) float jx_textRepeatCount;
+/// 文字初始停留时间。默认1.0
+@property (nonatomic, assign) CFTimeInterval jx_textBeginStayTime;
 
-### JXPlus 内容
+/// 文字滚动时间，默认0；设置后无视jx_textEndStayTime（优先级高1，动画结束不一定滚动完）
+@property (nonatomic, assign) CFTimeInterval jx_textDuration;
+/// 文字滚动速率，默认0；（优先级次高2，动画结束不一定滚动完，相当于jx_textDuration = 文字长度 * jx_textRate ）
+@property (nonatomic, assign) CFTimeInterval jx_textRate;
+/// 文字滚动结束后停留时间。默认1.0 （优先级最低3。 jx_textBeginStayTime + （自动计算）滚动时间 + jx_textEndStayTime = SVGA总动画时长，计算小于0则未滚动完）
+@property (nonatomic, assign) CFTimeInterval jx_textEndStayTime;
+
+### 2.5.7 JXPlus 内容
 1. JXSVGAImageView, 使用JXCacheURLSession代替NSURLSession，依赖YYCache实现缓存
 2. 新增两个jx_r_替换图片的圆角方法
 3. 使用jx_RTLText区分文字滚动右到左

@@ -149,6 +149,13 @@ static SVGAParser *sharedParser;
 
 - (void)initPlayer {
     self.contentMode = UIViewContentModeTop;
+    self.jx_textRepeatCount = 0;
+    self.jx_textBeginStayTime = 1.0;
+    self.jx_textDuration = 0.0;
+    self.jx_textRate = 0.0;
+    self.jx_textEndStayTime = 1.0;
+    self.jx_autoContentMode = false;
+    
     self.loops = 1;
     self.clearsAfterStop = YES;
     self.autoPlay = true;
@@ -224,16 +231,23 @@ static SVGAParser *sharedParser;
                         animation.toValue = @(-dx);
                     }
                     
-                    CGFloat duration = ((CGFloat)self.videoItem.frames) /self.videoItem.FPS;
-                    if (duration - 2 > 0) {
-                        animation.duration = duration - 2;
-                        animation.beginTime = CACurrentMediaTime() + 1;
+                    animation.beginTime = CACurrentMediaTime() + self.jx_textBeginStayTime;
+                    if (self.jx_textDuration > 0) {
+                        animation.duration = self.jx_textDuration;
+                    } else if (self.jx_textRate > 0) {
+                        animation.duration = size.width * self.jx_textRate;
                     } else {
-                        animation.duration = duration;
-                        animation.beginTime = CACurrentMediaTime();
+                        /// 计算svga时长
+                        CGFloat duration = ((CGFloat)self.videoItem.frames) /self.videoItem.FPS;
+                        CGFloat jx_duration = duration - self.jx_textBeginStayTime - self.jx_textEndStayTime;
+                        if (jx_duration > 0) {
+                            animation.duration = jx_duration;
+                        } else {
+                            animation.duration = duration;
+                        }
                     }
-                    
-                    animation.repeatCount = 0;
+
+                    animation.repeatCount = self.jx_textRepeatCount;
                     animation.removedOnCompletion = false;
                     animation.fillMode = kCAFillModeForwards;
                     animation.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionLinear];
