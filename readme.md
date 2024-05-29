@@ -3,17 +3,41 @@
 [简体中文](./readme.zh.md)
 
 ### JXPlus 内容
+### 2.5.7.2 修复url下载bug
+
+1. 新增JXSVGAImageViewDelegate，拓展两个代理
+
+ 1.1/// 新增error处理，没实现会走svgaPlayerDidFinishedAnimation
+ 
+`- (void)svgaPlayer:(JXSVGAImageView *)player error:(NSError *)error;`
+
+/// 替换元素error
+
+`- (void)svgaPlayer:(JXSVGAImageView *)player forKeyError:(NSError *)error;`
+
+
+2. 新增jx_autoPlayShow，设置imageName后自动hidden置false,  默认true
+
+
 ### 2.5.7.1 新增文字滚动时间调整
 /// 文字重复次数。默认0不重复
+
 @property (nonatomic, assign) float jx_textRepeatCount;
+
 /// 文字初始停留时间。默认1.0
+
 @property (nonatomic, assign) CFTimeInterval jx_textBeginStayTime;
 
 /// 文字滚动时间，默认0；设置后无视jx_textEndStayTime（优先级高1，动画结束不一定滚动完）
+
 @property (nonatomic, assign) CFTimeInterval jx_textDuration;
+
 /// 文字滚动速率，默认0；（优先级次高2，动画结束不一定滚动完，相当于jx_textDuration = 文字长度 * jx_textRate ）
+
 @property (nonatomic, assign) CFTimeInterval jx_textRate;
+
 /// 文字滚动结束后停留时间。默认1.0 （优先级最低3。 jx_textBeginStayTime + （自动计算）滚动时间 + jx_textEndStayTime = SVGA总动画时长，计算小于0则未滚动完）
+
 @property (nonatomic, assign) CFTimeInterval jx_textEndStayTime;
 
 ### 2.5.7 JXPlus 内容

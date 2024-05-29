@@ -69,39 +69,82 @@ static SVGAParser *sharedParser;
     _imageName = imageName;
     if ([imageName hasPrefix:@"http://"] || [imageName hasPrefix:@"https://"]) {
         NSURL *url = [NSURL URLWithString:imageName];
-        [JXCacheURLSession.sharedSession dataTaskWithURL:url completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+        if ([self jx_playCacheKey_SVGA:url]) {//使用CacheKey
+            return;
+        }
+        [[JXCacheURLSession.sharedSession dataTaskWithURL:url completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
             [NSOperationQueue.mainQueue addOperationWithBlock:^{
                 if (error) {
-                    if ([self.delegate respondsToSelector:@selector(svgaPlayerDidFinishedAnimation:)]) {
+#ifdef DEBUG
+        NSLog(@"setImageName JXCacheURLSession error:%@", error);
+#endif
+                    if ([self.delegate respondsToSelector:@selector(svgaPlayer:error:)]) {
+                        [self.delegate svgaPlayer:self error:error];
+                    } else if ([self.delegate respondsToSelector:@selector(svgaPlayerDidFinishedAnimation:)]) {
                         [self.delegate svgaPlayerDidFinishedAnimation:nil];
                     }
                     return;
                 }
                 [sharedParser parseWithData:data cacheKey:[self cacheKey:url] completionBlock:^(SVGAVideoEntity * _Nonnull videoItem) {
                     [self setVideoItem:videoItem];
+                    if (self.jx_autoPlayShow) {
+                        self.hidden = false;
+                    }
                     if (self.autoPlay) {
                         [self startAnimation];
                     }
                 } failureBlock:^(NSError * _Nonnull error) {
-                    if ([self.delegate respondsToSelector:@selector(svgaPlayerDidFinishedAnimation:)]) {
+#ifdef DEBUG
+        NSLog(@"setImageName parseWithData error:%@", error);
+#endif
+                    if ([self.delegate respondsToSelector:@selector(svgaPlayer:error:)]) {
+                        [self.delegate svgaPlayer:self error:error];
+                    } else if ([self.delegate respondsToSelector:@selector(svgaPlayerDidFinishedAnimation:)]) {
                         [self.delegate svgaPlayerDidFinishedAnimation:nil];
                     }
                 }];
             }];
-        }];
+        }] resume];
     }
     else {
         [sharedParser parseWithNamed:imageName inBundle:nil completionBlock:^(SVGAVideoEntity * _Nonnull videoItem) {
             [self setVideoItem:videoItem];
+            if (self.jx_autoPlayShow) {
+                self.hidden = false;
+            }
             if (self.autoPlay) {
                 [self startAnimation];
             }
         } failureBlock:^(NSError * _Nonnull error) {
-            if ([self.delegate respondsToSelector:@selector(svgaPlayerDidFinishedAnimation:)]) {
+#ifdef DEBUG
+        NSLog(@"setImageName parseWithNamed error:%@", error);
+#endif
+            if ([self.delegate respondsToSelector:@selector(svgaPlayer:error:)]) {
+                [self.delegate svgaPlayer:self error:error];
+            } else if ([self.delegate respondsToSelector:@selector(svgaPlayerDidFinishedAnimation:)]) {
                 [self.delegate svgaPlayerDidFinishedAnimation:nil];
             }
         }];
     }
+}
+
+#pragma mark - 使用CacheKey
+- (BOOL)jx_playCacheKey_SVGA:(NSURL *)url {
+    if (url == nil) {
+        return false;
+    }
+    SVGAVideoEntity *videoItem = [SVGAVideoEntity readCache:[self cacheKey:url]];
+    if (videoItem) {
+#ifdef DEBUG
+        NSLog(@"jx_playCacheKey_SVGA");
+#endif
+        [self setVideoItem:videoItem];
+        [NSOperationQueue.mainQueue addBarrierBlock:^{
+            [self stepToFrame:0 andPlay:self.autoPlay];
+        }];
+        return true;
+    }
+    return false;
 }
 
 
@@ -113,6 +156,16 @@ static SVGAParser *sharedParser;
                 [[NSOperationQueue mainQueue] addOperationWithBlock:^{
                     [self setImage:image forKey:aKey];
                 }];
+            } else {
+#ifdef DEBUG
+        NSLog(@"setImageWithURL JXCacheURLSession error:%@", error);
+#endif
+                if ([self.delegate respondsToSelector:@selector(svgaPlayer:forKeyError:)]) {
+                    [[NSOperationQueue mainQueue] addOperationWithBlock:^{
+                        NSError *error1 = [NSError errorWithDomain:NSCocoaErrorDomain code:0 userInfo:@{@"func":@"setImageWithURL:forKey:", @"aKey": aKey?: @"", @"URL": URL.description?:@"", @"error": error}];
+                        [self.delegate svgaPlayer:self forKeyError:error1];
+                    }];
+                }
             }
         }
     }] resume];
@@ -133,6 +186,16 @@ static SVGAParser *sharedParser;
                     [self setImage:image forKey:aKey];
                 }];
             }
+        } else {
+#ifdef DEBUG
+        NSLog(@"r_setImageWithURL JXCacheURLSession error:%@", error);
+#endif
+            if ([self.delegate respondsToSelector:@selector(svgaPlayer:forKeyError:)]) {
+                [[NSOperationQueue mainQueue] addOperationWithBlock:^{
+                    NSError *error1 = [NSError errorWithDomain:NSCocoaErrorDomain code:0 userInfo:@{@"func":@"r_setImageWithURL:forKey:", @"aKey": aKey?: @"", @"URL": URL.description?:@"", @"error": error}];
+                    [self.delegate svgaPlayer:self forKeyError:error1];
+                }];
+            }
         }
     }] resume];
 }
@@ -149,6 +212,7 @@ static SVGAParser *sharedParser;
 
 - (void)initPlayer {
     self.contentMode = UIViewContentModeTop;
+    self.jx_autoPlayShow = true;
     self.jx_textRepeatCount = 0;
     self.jx_textBeginStayTime = 1.0;
     self.jx_textDuration = 0.0;
@@ -282,7 +346,7 @@ static SVGAParser *sharedParser;
 }
 
 - (void)setVideoItem:(SVGAVideoEntity *)videoItem {
-    super.videoItem = videoItem;
+    [super setVideoItem:videoItem];
     if (videoItem &&
         self.jx_autoContentMode) {
         self.contentMode = (videoItem.videoSize.width < videoItem.videoSize.height) ? UIViewContentModeScaleAspectFill : UIViewContentModeScaleAspectFit;

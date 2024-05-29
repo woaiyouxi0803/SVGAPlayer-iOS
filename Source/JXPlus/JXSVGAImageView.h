@@ -7,14 +7,41 @@
 
 #import "SVGAPlayer.h"
 #import "SVGAParser.h"
-
+#import "SVGAVideoEntity.h"
 NS_ASSUME_NONNULL_BEGIN
 
+@class JXSVGAImageView;
+@protocol JXSVGAImageViewDelegate <NSObject>
+
+@optional
+- (void)svgaPlayerDidFinishedAnimation:(JXSVGAImageView *)player ;
+
+- (void)svgaPlayer:(JXSVGAImageView *)player didAnimatedToFrame:(NSInteger)frame;
+- (void)svgaPlayer:(JXSVGAImageView *)player didAnimatedToPercentage:(CGFloat)percentage;
+
+- (void)svgaPlayerDidAnimatedToFrame:(NSInteger)frame API_DEPRECATED("Use svgaPlayer:didAnimatedToFrame: instead", ios(7.0, API_TO_BE_DEPRECATED));
+- (void)svgaPlayerDidAnimatedToPercentage:(CGFloat)percentage API_DEPRECATED("Use svgaPlayer:didAnimatedToPercentage: instead", ios(7.0, API_TO_BE_DEPRECATED));
+
+/// 新增error处理，没实现会走svgaPlayerDidFinishedAnimation
+- (void)svgaPlayer:(JXSVGAImageView *)player error:(NSError *)error;
+
+/// 替换元素error
+- (void)svgaPlayer:(JXSVGAImageView *)player forKeyError:(NSError *)error;
+
+@end
+
+
 @interface JXSVGAImageView : SVGAPlayer
+
+@property (nonatomic, weak) id<JXSVGAImageViewDelegate> delegate;
+
 /// 本地svga名/ http的URL
 @property (nonatomic, copy) IBInspectable NSString *imageName;
 /// 设置imageName后自动播放, 默认true
 @property (nonatomic, assign) IBInspectable BOOL autoPlay;
+
+/// 设置imageName后自动hidden置false,  默认true
+@property (nonatomic, assign) BOOL jx_autoPlayShow;
 
 /// 圆角图片替换
 - (void)jx_r_setImage:(UIImage *)image forKey:(NSString *)aKey;
