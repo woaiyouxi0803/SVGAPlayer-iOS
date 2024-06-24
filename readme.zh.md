@@ -1,5 +1,8 @@
 # SVGAPlayer
 ### JXPlus 内容
+
+### 2.5.7.3 修复圆角图片替换方法名问题
+
 ### 2.5.7.2 修复url下载bug
 
 1. 新增JXSVGAImageViewDelegate，拓展两个代理

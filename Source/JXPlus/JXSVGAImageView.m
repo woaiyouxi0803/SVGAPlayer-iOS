@@ -172,11 +172,11 @@ static SVGAParser *sharedParser;
 }
 
 #pragma mark - 设置圆角
-- (void)r_setImage:(UIImage *)image forKey:(NSString *)aKey {
+- (void)jx_r_setImage:(UIImage *)image forKey:(NSString *)aKey {
     [self setImage:[image jx_2RoundedCorner] forKey:aKey];
 }
 
-- (void)r_setImageWithURL:(NSURL *)URL forKey:(NSString *)aKey {
+- (void)jx_r_setImageWithURL:(NSURL *)URL forKey:(NSString *)aKey {
     [[JXCacheURLSession.sharedSession dataTaskWithURL:URL completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         if (error == nil && data != nil) {
             UIImage *image = [UIImage imageWithData:data];
