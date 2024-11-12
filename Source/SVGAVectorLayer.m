@@ -85,7 +85,14 @@
                 return;
             }
         }
-        while(self.sublayers.count) [self.sublayers.firstObject removeFromSuperlayer];
+//        while(self.sublayers.count) [self.sublayers.firstObject removeFromSuperlayer];
+        while(self.sublayers.count > 0) {
+            CALayer *firstLayer = self.sublayers.firstObject;
+            if (firstLayer) {
+                [firstLayer removeFromSuperlayer];
+            }
+        }
+                          
         for (NSDictionary *shape in frameItem.shapes) {
             if ([shape isKindOfClass:[NSDictionary class]]) {
                 if ([shape[@"type"] isKindOfClass:[NSString class]]) {

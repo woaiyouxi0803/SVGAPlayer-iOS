@@ -3,6 +3,12 @@
 [简体中文](./readme.zh.md)
 
 ### JXPlus 内容
+
+### 2.5.7.4 修改可能的崩溃
+SVGAVectorLayer
+Svga.pbobjc.m加头文件
+
+
 ### 2.5.7.3 修复圆角图片替换方法名问题
 
 ### 2.5.7.2 修复url下载bug

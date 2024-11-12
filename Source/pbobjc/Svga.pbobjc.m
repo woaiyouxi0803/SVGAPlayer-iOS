@@ -15,6 +15,7 @@
 
 #import "Svga.pbobjc.h"
 // @@protoc_insertion_point(imports)
+#import <libkern/OSAtomicDeprecated.h>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
