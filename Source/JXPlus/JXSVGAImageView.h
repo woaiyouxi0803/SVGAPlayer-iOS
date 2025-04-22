@@ -67,8 +67,16 @@ NS_ASSUME_NONNULL_BEGIN
 /// 文字滚动结束后停留时间。默认1.0 （优先级最低3。 jx_textBeginStayTime + （自动计算）滚动时间 + jx_textEndStayTime = SVGA总动画时长，计算小于0则未滚动完）
 @property (nonatomic, assign) CFTimeInterval jx_textEndStayTime;
 
++ (SVGAParser *)jx_sharedParser;
 
+/// url字符转 cacheKey
++ (NSString *)jx_cacheKey:(NSString *)urlStr;
 
+/// 缓存路径
++ (nullable NSString *)jx_cacheDirectory:(NSString *)urlStr;
+
+/// 自动播放缓存
+- (BOOL)jx_playCacheKey_SVGA:(NSString *)url;
 
 @end
 

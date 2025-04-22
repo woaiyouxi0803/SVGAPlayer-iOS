@@ -4,6 +4,10 @@
 
 ### JXPlus 内容
 
+### 2.5.7.5 
+圆角处理增加maxDimension限制
+try避免奔溃imageWithData崩溃
+
 ### 2.5.7.4 修改可能的崩溃
 SVGAVectorLayer
 Svga.pbobjc.m加头文件

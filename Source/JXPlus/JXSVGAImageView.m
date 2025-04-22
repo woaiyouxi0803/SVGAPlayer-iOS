@@ -23,22 +23,45 @@
 #import "SVGAAudioEntity.h"
 
 @implementation UIImage (JXRoundedCorner)
-- (UIImage*)jx_2RoundedCorner {
+//- (UIImage*)jx_2RoundedCorner {
+//    CGFloat w = self.size.width;
+//    CGFloat h = self.size.height;
+//
+//    CGFloat radius = MIN(w, h) / 2.0;
+//    CGRect frame = CGRectMake(0, 0, 2 * radius, 2 * radius);
+//
+//    UIImage *image = nil;
+//    UIGraphicsBeginImageContext(frame.size);
+//    [[UIBezierPath bezierPathWithRoundedRect:frame cornerRadius:radius] addClip];
+//    [self drawInRect:frame];
+//    image = UIGraphicsGetImageFromCurrentImageContext();
+//    UIGraphicsEndImageContext();
+//    return image;
+//}
+- (UIImage *)jx_2RoundedCorner {
     CGFloat w = self.size.width;
     CGFloat h = self.size.height;
+    
+    // 如果图像尺寸过大，先进行缩放
+    CGFloat maxDimension = 300.0; // 最大尺寸限制
+    if (w > maxDimension || h > maxDimension) {
+        CGFloat scale = MIN(maxDimension / w, maxDimension / h);
+        w *= scale;
+        h *= scale;
+    }
     
     CGFloat radius = MIN(w, h) / 2.0;
     CGRect frame = CGRectMake(0, 0, 2 * radius, 2 * radius);
 
-    UIImage *image = nil;
-    UIGraphicsBeginImageContext(frame.size);
-    [[UIBezierPath bezierPathWithRoundedRect:frame cornerRadius:radius] addClip];
-    [self drawInRect:frame];
-    image = UIGraphicsGetImageFromCurrentImageContext();
-    UIGraphicsEndImageContext();
+    UIGraphicsImageRenderer *renderer = [[UIGraphicsImageRenderer alloc] initWithSize:frame.size];
+    UIImage *image = [renderer imageWithActions:^(UIGraphicsImageRendererContext * _Nonnull rendererContext) {
+        UIBezierPath *path = [UIBezierPath bezierPathWithRoundedRect:frame cornerRadius:radius];
+        [path addClip];
+        [self drawInRect:frame];
+    }];
+
     return image;
 }
-
 @end
 
 
@@ -68,15 +91,15 @@ static SVGAParser *sharedParser;
 - (void)setImageName:(NSString *)imageName {
     _imageName = imageName;
     if ([imageName hasPrefix:@"http://"] || [imageName hasPrefix:@"https://"]) {
-        NSURL *url = [NSURL URLWithString:imageName];
-        if ([self jx_playCacheKey_SVGA:url]) {//使用CacheKey
+        if ([self jx_playCacheKey_SVGA:imageName]) {//使用CacheKey
             return;
         }
+        NSURL *url = [NSURL URLWithString:imageName];
         [[JXCacheURLSession.sharedSession dataTaskWithURL:url completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
             [NSOperationQueue.mainQueue addOperationWithBlock:^{
                 if (error) {
 #ifdef DEBUG
-        NSLog(@"setImageName JXCacheURLSession error:%@", error);
+                    NSLog(@"setImageName JXCacheURLSession error:%@", error);
 #endif
                     if ([self.delegate respondsToSelector:@selector(svgaPlayer:error:)]) {
                         [self.delegate svgaPlayer:self error:error];
@@ -85,17 +108,14 @@ static SVGAParser *sharedParser;
                     }
                     return;
                 }
-                [sharedParser parseWithData:data cacheKey:[self cacheKey:url] completionBlock:^(SVGAVideoEntity * _Nonnull videoItem) {
+                [sharedParser parseWithData:data cacheKey:[JXSVGAImageView MD5String:url.absoluteString] completionBlock:^(SVGAVideoEntity * _Nonnull videoItem) {
                     [self setVideoItem:videoItem];
-                    if (self.jx_autoPlayShow) {
-                        self.hidden = false;
-                    }
                     if (self.autoPlay) {
                         [self startAnimation];
                     }
                 } failureBlock:^(NSError * _Nonnull error) {
 #ifdef DEBUG
-        NSLog(@"setImageName parseWithData error:%@", error);
+                    NSLog(@"setImageName parseWithData error:%@", error);
 #endif
                     if ([self.delegate respondsToSelector:@selector(svgaPlayer:error:)]) {
                         [self.delegate svgaPlayer:self error:error];
@@ -109,15 +129,12 @@ static SVGAParser *sharedParser;
     else {
         [sharedParser parseWithNamed:imageName inBundle:nil completionBlock:^(SVGAVideoEntity * _Nonnull videoItem) {
             [self setVideoItem:videoItem];
-            if (self.jx_autoPlayShow) {
-                self.hidden = false;
-            }
             if (self.autoPlay) {
                 [self startAnimation];
             }
         } failureBlock:^(NSError * _Nonnull error) {
 #ifdef DEBUG
-        NSLog(@"setImageName parseWithNamed error:%@", error);
+            NSLog(@"setImageName parseWithNamed error:%@", error);
 #endif
             if ([self.delegate respondsToSelector:@selector(svgaPlayer:error:)]) {
                 [self.delegate svgaPlayer:self error:error];
@@ -129,14 +146,14 @@ static SVGAParser *sharedParser;
 }
 
 #pragma mark - 使用CacheKey
-- (BOOL)jx_playCacheKey_SVGA:(NSURL *)url {
+- (BOOL)jx_playCacheKey_SVGA:(NSString *)url {
     if (url == nil) {
         return false;
     }
-    SVGAVideoEntity *videoItem = [SVGAVideoEntity readCache:[self cacheKey:url]];
+    SVGAVideoEntity *videoItem = [SVGAVideoEntity readCache:[JXSVGAImageView MD5String:url]];
     if (videoItem) {
 #ifdef DEBUG
-        NSLog(@"jx_playCacheKey_SVGA");
+//        NSLog(@"jx_playCacheKey_SVGA");
 #endif
         [self setVideoItem:videoItem];
         [NSOperationQueue.mainQueue addBarrierBlock:^{
@@ -158,7 +175,7 @@ static SVGAParser *sharedParser;
                 }];
             } else {
 #ifdef DEBUG
-        NSLog(@"setImageWithURL JXCacheURLSession error:%@", error);
+                NSLog(@"setImageWithURL JXCacheURLSession error:%@", error);
 #endif
                 if ([self.delegate respondsToSelector:@selector(svgaPlayer:forKeyError:)]) {
                     [[NSOperationQueue mainQueue] addOperationWithBlock:^{
@@ -179,7 +196,14 @@ static SVGAParser *sharedParser;
 - (void)jx_r_setImageWithURL:(NSURL *)URL forKey:(NSString *)aKey {
     [[JXCacheURLSession.sharedSession dataTaskWithURL:URL completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         if (error == nil && data != nil) {
-            UIImage *image = [UIImage imageWithData:data];
+            UIImage *image;
+            @try {
+                image = [UIImage imageWithData:data];
+            } @catch (NSException *exception) {
+                
+            } @finally {
+
+            }
             if (image != nil) {
                 image = [image jx_2RoundedCorner];
                 [[NSOperationQueue mainQueue] addOperationWithBlock:^{
@@ -188,7 +212,7 @@ static SVGAParser *sharedParser;
             }
         } else {
 #ifdef DEBUG
-        NSLog(@"r_setImageWithURL JXCacheURLSession error:%@", error);
+            NSLog(@"r_setImageWithURL JXCacheURLSession error:%@", error);
 #endif
             if ([self.delegate respondsToSelector:@selector(svgaPlayer:forKeyError:)]) {
                 [[NSOperationQueue mainQueue] addOperationWithBlock:^{
@@ -272,7 +296,7 @@ static SVGAParser *sharedParser;
                 CATextLayer *textLayer = [CATextLayer layer];
                 textLayer.contentsScale = [[UIScreen mainScreen] scale];
                 [textLayer setString:self.dynamicTexts[sprite.imageKey]];
-
+                
                 contentLayer.bitmapLayer.masksToBounds = YES;
                 contentLayer.textLayer = textLayer;
                 if(bitmapSize.width - size.width < 10){
@@ -310,7 +334,7 @@ static SVGAParser *sharedParser;
                             animation.duration = duration;
                         }
                     }
-
+                    
                     animation.repeatCount = self.jx_textRepeatCount;
                     animation.removedOnCompletion = false;
                     animation.fillMode = kCAFillModeForwards;
@@ -340,12 +364,15 @@ static SVGAParser *sharedParser;
         [audioLayers addObject:audioLayer];
     }];
     self.audioLayers = audioLayers;
-
+    
     [self performSelector:@selector(update)];
     [self performSelector:@selector(resize)];
 }
 
 - (void)setVideoItem:(SVGAVideoEntity *)videoItem {
+    if (videoItem != nil && self.jx_autoPlayShow) {
+        self.hidden = false;
+    }
     [super setVideoItem:videoItem];
     if (videoItem &&
         self.jx_autoContentMode) {
@@ -382,17 +409,21 @@ static SVGAParser *sharedParser;
     return _dynamicDrawings;
 }
 
-#pragma mark - 复制
-- (nonnull NSString *)cacheKey:(NSURL *)URL {
-    return [self MD5String:URL.absoluteString];
+#pragma mark - 改+方便外部使用
++ (SVGAParser *)jx_sharedParser {
+    return sharedParser;
 }
 
-- (nullable NSString *)cacheDirectory:(NSString *)cacheKey {
++ (NSString *)jx_cacheKey:(NSString *)urlStr {
+    return [self MD5String:urlStr];
+}
+
++ (nullable NSString *)jx_cacheDirectory:(NSString *)urlStr {
     NSString *cacheDir = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) firstObject];
-    return [cacheDir stringByAppendingFormat:@"/%@", cacheKey];
+    return [cacheDir stringByAppendingFormat:@"/%@", [self MD5String:urlStr]];
 }
 
-- (NSString *)MD5String:(NSString *)str {
++ (NSString *)MD5String:(NSString *)str {
     const char *cstr = [str UTF8String];
     unsigned char result[16];
     CC_MD5(cstr, (CC_LONG)strlen(cstr), result);
@@ -404,4 +435,5 @@ static SVGAParser *sharedParser;
             result[12], result[13], result[14], result[15]
             ];
 }
+
 @end
